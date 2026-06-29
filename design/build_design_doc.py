@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the one-page Step 1 design document as a PDF."""
+"""Generates the one-page Step 2 design document as a PDF."""
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -30,7 +30,7 @@ doc = SimpleDocTemplate(
 
 story = []
 story.append(Paragraph("Multi-Source Candidate Data Transformer — Technical Design", title_style))
-story.append(Paragraph(f"{YOUR_FULL_NAME} &nbsp;&middot;&nbsp; {YOUR_EMAIL} &nbsp;&middot;&nbsp; Eightfold Engineering Intern (Jul–Dec 2026), Stage 1", sub_style))
+story.append(Paragraph(f"{YOUR_FULL_NAME} &nbsp;&middot;&nbsp; {YOUR_EMAIL} &nbsp;&middot;&nbsp; Eightfold Engineering Intern (Jul–Dec 2026), Stage 2", sub_style))
 story.append(HRFlowable(width="100%", thickness=0.6, color=colors.HexColor("#cccccc"), spaceAfter=4))
 
 

@@ -1,0 +1,1 @@
+"""Eightfold candidate data transformer."""

@@ -1,0 +1,4 @@
+candidate_id,name,email,phone,current_company,title,location,start_date,linkedin_url
+C-1001,Asha Verma,asha.verma@example.com,+91 98765 43210,Northwind Labs,Senior Backend Engineer,"Bengaluru, Karnataka, India",2022-03,https://linkedin.com/in/ashaverma
+C-1002,Daniel Cho,dcho@example.com,4155550199,BrightLane,Software Engineer II,"San Francisco, California, USA",2021,
+C-1003,Priya Nair,priya.nair@example.com,+91-90000-11122,DeltaWorks,Product Engineer,"Pune, Maharashtra, India",2023,

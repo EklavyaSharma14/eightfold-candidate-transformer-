@@ -1,0 +1,12 @@
+[
+  {
+    "applicant_ref": "ATS-9003",
+    "applicant_name": "Priya Nair",
+    "contact_email": "priya.nair@example.com",
+    "mobile_number": "+919000011122",
+    "current_role": "Product Engineer",
+    "employer": "DeltaWorks",
+    "city_country": "Pune, India",
+    "yrs_exp": 3,
+  }
+]

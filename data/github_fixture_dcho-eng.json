@@ -1,0 +1,14 @@
+{
+  "login": "dcho-eng",
+  "name": "Daniel Cho",
+  "bio": "Full-stack engineer",
+  "location": "San Francisco, CA",
+  "html_url": "https://github.com/dcho-eng",
+  "blog": null,
+  "company": "BrightLane",
+  "repos": [
+    {"name": "api-gateway", "language": "JavaScript", "description": "Internal API gateway"},
+    {"name": "data-pipeline", "language": "Python", "description": "ETL jobs"},
+    {"name": "cli-tool", "language": "Go", "description": "Internal CLI"}
+  ]
+}

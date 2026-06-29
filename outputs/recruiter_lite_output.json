@@ -1,0 +1,46 @@
+{
+  "results": [
+    {
+      "id": "C-1001",
+      "full_name": "Asha Verma",
+      "primary_email": "asha.verma@example.com",
+      "phone_display": "098765 43210",
+      "current_title": "Senior Backend Engineer",
+      "years_experience": 6.5,
+      "skill_names": [
+        "Go",
+        "Python",
+        "AWS",
+        "Django",
+        "JavaScript",
+        "PostgreSQL"
+      ],
+      "country": "IN",
+      "overall_confidence": 0.92
+    },
+    {
+      "id": "C-1002",
+      "full_name": "Daniel Cho",
+      "primary_email": "daniel.cho@example.com",
+      "phone_display": "(415) 555-0199",
+      "current_title": "Senior Software Engineer",
+      "years_experience": 4.0,
+      "skill_names": [
+        "JavaScript",
+        "Python",
+        "Go",
+        "Node.js",
+        "SQL"
+      ],
+      "country": "US",
+      "overall_confidence": 0.87
+    },
+    {
+      "candidate_id": "C-1003",
+      "error": "required field 'years_experience' (from 'years_experience') is missing"
+    }
+  ],
+  "run_errors": [
+    "C-1003: required field 'years_experience' (from 'years_experience') is missing"
+  ]
+}

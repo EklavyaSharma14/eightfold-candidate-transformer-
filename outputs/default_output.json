@@ -1,0 +1,736 @@
+{
+  "results": [
+    {
+      "candidate_id": "C-1001",
+      "full_name": "Asha Verma",
+      "emails": [
+        "asha.verma@example.com"
+      ],
+      "phones": [
+        "+919876543210"
+      ],
+      "location": {
+        "city": "Bengaluru",
+        "region": null,
+        "country": "IN"
+      },
+      "links": {
+        "linkedin": "https://linkedin.com/in/ashaverma",
+        "github": "https://github.com/asha-verma",
+        "portfolio": "https://ashaverma.dev",
+        "other": []
+      },
+      "headline": "Senior Backend Engineer",
+      "years_experience": 6.5,
+      "skills": [
+        {
+          "name": "Go",
+          "confidence": 1.0,
+          "sources": [
+            "github",
+            "notes"
+          ]
+        },
+        {
+          "name": "Python",
+          "confidence": 1.0,
+          "sources": [
+            "ats_json",
+            "github",
+            "notes"
+          ]
+        },
+        {
+          "name": "AWS",
+          "confidence": 0.85,
+          "sources": [
+            "ats_json",
+            "notes"
+          ]
+        },
+        {
+          "name": "Django",
+          "confidence": 0.85,
+          "sources": [
+            "ats_json",
+            "notes"
+          ]
+        },
+        {
+          "name": "JavaScript",
+          "confidence": 0.85,
+          "sources": [
+            "github"
+          ]
+        },
+        {
+          "name": "PostgreSQL",
+          "confidence": 0.6,
+          "sources": [
+            "ats_json"
+          ]
+        }
+      ],
+      "experience": [
+        {
+          "company": "Northwind Labs",
+          "title": "Senior Backend Engineer",
+          "start": "2022-03",
+          "end": null,
+          "summary": "Leads the payments platform team."
+        },
+        {
+          "company": "Vertex Systems",
+          "title": "Backend Engineer",
+          "start": "2019-01",
+          "end": "2022-02",
+          "summary": "Built internal tooling and billing services."
+        }
+      ],
+      "education": [
+        {
+          "institution": "IIT Bombay",
+          "degree": "B.Tech",
+          "field": "Computer Science",
+          "end_year": 2018
+        }
+      ],
+      "overall_confidence": 0.92,
+      "provenance": [
+        {
+          "field": "full_name",
+          "source": "ats_json",
+          "method": "merged:winner",
+          "raw_value": "Asha Verma",
+          "note": "trimmed/whitespace-collapsed; case preserved as given"
+        },
+        {
+          "field": "emails",
+          "source": "csv",
+          "method": "merged:union",
+          "raw_value": "asha.verma@example.com",
+          "note": "looks like a valid email"
+        },
+        {
+          "field": "emails",
+          "source": "ats_json",
+          "method": "merged:union",
+          "raw_value": "asha.verma@example.com",
+          "note": "looks like a valid email"
+        },
+        {
+          "field": "phones",
+          "source": "csv",
+          "method": "merged:union",
+          "raw_value": "+91 98765 43210",
+          "note": "parsed cleanly"
+        },
+        {
+          "field": "phones",
+          "source": "ats_json",
+          "method": "merged:union",
+          "raw_value": "+919876543210",
+          "note": "parsed cleanly"
+        },
+        {
+          "field": "phones",
+          "source": "notes",
+          "method": "merged:union",
+          "raw_value": "+91 98765 43210",
+          "note": "parsed cleanly"
+        },
+        {
+          "field": "location",
+          "source": "csv",
+          "method": "merged:overridden",
+          "raw_value": "Bengaluru, Karnataka, India",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "location",
+          "source": "ats_json",
+          "method": "merged:winner",
+          "raw_value": "Bengaluru, India",
+          "note": "alias match for 'India'"
+        },
+        {
+          "field": "headline",
+          "source": "github",
+          "method": "merged:overridden",
+          "raw_value": "Backend engineer. Payments & distributed systems.",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "headline",
+          "source": "ats_json",
+          "method": "merged:winner",
+          "raw_value": "Senior Backend Engineer",
+          "note": "trimmed/whitespace-collapsed; case preserved as given"
+        },
+        {
+          "field": "years_experience",
+          "source": "notes",
+          "method": "merged:overridden",
+          "raw_value": "6",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "years_experience",
+          "source": "ats_json",
+          "method": "merged:winner",
+          "raw_value": 6.5,
+          "note": "parsed as number"
+        },
+        {
+          "field": "skills",
+          "source": "ats_json",
+          "method": "canonicalized:alias match for 'python'",
+          "raw_value": "python",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "ats_json",
+          "method": "canonicalized:alias match for 'django'",
+          "raw_value": "django",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "ats_json",
+          "method": "canonicalized:alias match for 'postgres'",
+          "raw_value": "postgres",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "ats_json",
+          "method": "canonicalized:alias match for 'aws'",
+          "raw_value": "aws",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "github",
+          "method": "canonicalized:alias match for 'Python'",
+          "raw_value": "Python",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "github",
+          "method": "canonicalized:alias match for 'Go'",
+          "raw_value": "Go",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "github",
+          "method": "canonicalized:alias match for 'JavaScript'",
+          "raw_value": "JavaScript",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "notes",
+          "method": "canonicalized:alias match for 'python'",
+          "raw_value": "python",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "notes",
+          "method": "canonicalized:alias match for 'django'",
+          "raw_value": "django",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "notes",
+          "method": "canonicalized:alias match for 'aws'",
+          "raw_value": "aws",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "notes",
+          "method": "canonicalized:alias match for 'go'",
+          "raw_value": "go",
+          "note": ""
+        },
+        {
+          "field": "experience",
+          "source": "csv",
+          "method": "extracted",
+          "raw_value": {
+            "company": "Northwind Labs",
+            "title": "Senior Backend Engineer"
+          },
+          "note": ""
+        },
+        {
+          "field": "experience",
+          "source": "ats_json",
+          "method": "merged:priority",
+          "raw_value": {
+            "company": "Northwind Labs",
+            "title": "Senior Backend Engineer"
+          },
+          "note": ""
+        },
+        {
+          "field": "experience",
+          "source": "ats_json",
+          "method": "extracted",
+          "raw_value": {
+            "company": "Vertex Systems",
+            "title": "Backend Engineer"
+          },
+          "note": ""
+        },
+        {
+          "field": "education",
+          "source": "ats_json",
+          "method": "extracted",
+          "raw_value": {
+            "institution": "IIT Bombay"
+          },
+          "note": ""
+        },
+        {
+          "field": "links.linkedin",
+          "source": "csv",
+          "method": "direct",
+          "raw_value": "https://linkedin.com/in/ashaverma",
+          "note": ""
+        },
+        {
+          "field": "links.github",
+          "source": "github",
+          "method": "direct",
+          "raw_value": "https://github.com/asha-verma",
+          "note": ""
+        },
+        {
+          "field": "links.portfolio",
+          "source": "github",
+          "method": "direct",
+          "raw_value": "https://ashaverma.dev",
+          "note": ""
+        }
+      ],
+      "source_errors": []
+    },
+    {
+      "candidate_id": "C-1002",
+      "full_name": "Daniel Cho",
+      "emails": [
+        "daniel.cho@example.com",
+        "dcho@example.com"
+      ],
+      "phones": [
+        "+14155550199"
+      ],
+      "location": {
+        "city": "San Francisco",
+        "region": null,
+        "country": "US"
+      },
+      "links": {
+        "linkedin": null,
+        "github": "https://github.com/dcho-eng",
+        "portfolio": null,
+        "other": []
+      },
+      "headline": "Senior Software Engineer",
+      "years_experience": 4.0,
+      "skills": [
+        {
+          "name": "JavaScript",
+          "confidence": 1.0,
+          "sources": [
+            "ats_json",
+            "github",
+            "notes"
+          ]
+        },
+        {
+          "name": "Python",
+          "confidence": 1.0,
+          "sources": [
+            "github",
+            "notes"
+          ]
+        },
+        {
+          "name": "Go",
+          "confidence": 0.85,
+          "sources": [
+            "github"
+          ]
+        },
+        {
+          "name": "Node.js",
+          "confidence": 0.85,
+          "sources": [
+            "ats_json",
+            "notes"
+          ]
+        },
+        {
+          "name": "SQL",
+          "confidence": 0.6,
+          "sources": [
+            "ats_json"
+          ]
+        }
+      ],
+      "experience": [
+        {
+          "company": "BrightLane",
+          "title": "Software Engineer II",
+          "start": "2021-01",
+          "end": null,
+          "summary": null
+        },
+        {
+          "company": "BrightLane",
+          "title": "Senior Software Engineer",
+          "start": "2021-01",
+          "end": null,
+          "summary": "Full-stack web platform work, owns the checkout redesign."
+        }
+      ],
+      "education": [
+        {
+          "institution": "UC Davis",
+          "degree": "B.S.",
+          "field": "Computer Science",
+          "end_year": 2019
+        }
+      ],
+      "overall_confidence": 0.87,
+      "provenance": [
+        {
+          "field": "full_name",
+          "source": "ats_json",
+          "method": "merged:winner",
+          "raw_value": "Daniel Cho",
+          "note": "trimmed/whitespace-collapsed; case preserved as given"
+        },
+        {
+          "field": "emails",
+          "source": "csv",
+          "method": "merged:union",
+          "raw_value": "dcho@example.com",
+          "note": "looks like a valid email"
+        },
+        {
+          "field": "emails",
+          "source": "ats_json",
+          "method": "merged:union",
+          "raw_value": "daniel.cho@example.com",
+          "note": "looks like a valid email"
+        },
+        {
+          "field": "phones",
+          "source": "csv",
+          "method": "merged:union",
+          "raw_value": "4155550199",
+          "note": "parsed cleanly"
+        },
+        {
+          "field": "phones",
+          "source": "ats_json",
+          "method": "merged:union",
+          "raw_value": "+14155550199",
+          "note": "parsed cleanly"
+        },
+        {
+          "field": "phones",
+          "source": "notes",
+          "method": "merged:union",
+          "raw_value": "415-555-0199",
+          "note": "parsed cleanly"
+        },
+        {
+          "field": "location",
+          "source": "csv",
+          "method": "merged:overridden",
+          "raw_value": "San Francisco, California, USA",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "location",
+          "source": "github",
+          "method": "merged:overridden",
+          "raw_value": "San Francisco, CA",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "location",
+          "source": "notes",
+          "method": "merged:overridden",
+          "raw_value": "San Francisco, CA",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "location",
+          "source": "ats_json",
+          "method": "merged:winner",
+          "raw_value": "San Francisco, US",
+          "note": "alias match for 'US'"
+        },
+        {
+          "field": "headline",
+          "source": "csv",
+          "method": "merged:overridden",
+          "raw_value": "Software Engineer II",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "headline",
+          "source": "github",
+          "method": "merged:overridden",
+          "raw_value": "Full-stack engineer",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "headline",
+          "source": "notes",
+          "method": "merged:overridden",
+          "raw_value": "Software Engineer II",
+          "note": "lost to higher-priority source (ats_json); kept here for audit"
+        },
+        {
+          "field": "headline",
+          "source": "ats_json",
+          "method": "merged:winner",
+          "raw_value": "Senior Software Engineer",
+          "note": "trimmed/whitespace-collapsed; case preserved as given"
+        },
+        {
+          "field": "years_experience",
+          "source": "ats_json",
+          "method": "merged:winner",
+          "raw_value": 4,
+          "note": "parsed as number"
+        },
+        {
+          "field": "skills",
+          "source": "ats_json",
+          "method": "canonicalized:alias match for 'javascript'",
+          "raw_value": "javascript",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "ats_json",
+          "method": "canonicalized:alias match for 'node.js'",
+          "raw_value": "node.js",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "ats_json",
+          "method": "canonicalized:alias match for 'sql'",
+          "raw_value": "sql",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "github",
+          "method": "canonicalized:alias match for 'JavaScript'",
+          "raw_value": "JavaScript",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "github",
+          "method": "canonicalized:alias match for 'Python'",
+          "raw_value": "Python",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "github",
+          "method": "canonicalized:alias match for 'Go'",
+          "raw_value": "Go",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "notes",
+          "method": "canonicalized:alias match for 'node'",
+          "raw_value": "node",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "notes",
+          "method": "canonicalized:alias match for 'js'",
+          "raw_value": "js",
+          "note": ""
+        },
+        {
+          "field": "skills",
+          "source": "notes",
+          "method": "canonicalized:alias match for 'py'",
+          "raw_value": "py",
+          "note": ""
+        },
+        {
+          "field": "experience",
+          "source": "csv",
+          "method": "extracted",
+          "raw_value": {
+            "company": "BrightLane",
+            "title": "Software Engineer II"
+          },
+          "note": ""
+        },
+        {
+          "field": "experience",
+          "source": "ats_json",
+          "method": "extracted",
+          "raw_value": {
+            "company": "BrightLane",
+            "title": "Senior Software Engineer"
+          },
+          "note": ""
+        },
+        {
+          "field": "education",
+          "source": "ats_json",
+          "method": "extracted",
+          "raw_value": {
+            "institution": "UC Davis"
+          },
+          "note": ""
+        },
+        {
+          "field": "links.github",
+          "source": "github",
+          "method": "direct",
+          "raw_value": "https://github.com/dcho-eng",
+          "note": ""
+        }
+      ],
+      "source_errors": []
+    },
+    {
+      "candidate_id": "C-1003",
+      "full_name": "Priya Nair",
+      "emails": [
+        "priya.nair@example.com"
+      ],
+      "phones": [
+        "+919000011122"
+      ],
+      "location": {
+        "city": "Pune",
+        "region": "Maharashtra",
+        "country": "IN"
+      },
+      "links": {
+        "linkedin": null,
+        "github": null,
+        "portfolio": null,
+        "other": []
+      },
+      "headline": "Product Engineer",
+      "years_experience": null,
+      "skills": [],
+      "experience": [
+        {
+          "company": "DeltaWorks",
+          "title": "Product Engineer",
+          "start": "2023-01",
+          "end": null,
+          "summary": null
+        }
+      ],
+      "education": [],
+      "overall_confidence": 0.53,
+      "provenance": [
+        {
+          "field": "full_name",
+          "source": "csv",
+          "method": "direct",
+          "raw_value": "Priya Nair",
+          "note": "trimmed/whitespace-collapsed; case preserved as given"
+        },
+        {
+          "field": "emails",
+          "source": "csv",
+          "method": "merged:union",
+          "raw_value": "priya.nair@example.com",
+          "note": "looks like a valid email"
+        },
+        {
+          "field": "phones",
+          "source": "csv",
+          "method": "merged:union",
+          "raw_value": "+91-90000-11122",
+          "note": "parsed cleanly"
+        },
+        {
+          "field": "location",
+          "source": "csv",
+          "method": "direct",
+          "raw_value": "Pune, Maharashtra, India",
+          "note": "alias match for 'India'"
+        },
+        {
+          "field": "headline",
+          "source": "csv",
+          "method": "direct",
+          "raw_value": "Product Engineer",
+          "note": "trimmed/whitespace-collapsed; case preserved as given"
+        },
+        {
+          "field": "experience",
+          "source": "csv",
+          "method": "extracted",
+          "raw_value": {
+            "company": "DeltaWorks",
+            "title": "Product Engineer"
+          },
+          "note": ""
+        }
+      ],
+      "source_errors": [
+        {
+          "source": "ats_json",
+          "spec": {
+            "type": "ats_json",
+            "path": "data/ats_export_corrupt.json",
+            "match": {
+              "field": "applicant_ref",
+              "value": "ATS-9003"
+            }
+          },
+          "error": "source file is not valid JSON: Expecting property name enclosed in double quotes: line 11 column 3 (char 285)"
+        },
+        {
+          "source": "github",
+          "spec": {
+            "type": "github",
+            "mode": "fixture",
+            "fixture_path": "data/github_fixture_does_not_exist.json"
+          },
+          "error": "source file not found: [Errno 2] No such file or directory: '/home/claude/eightfold-transformer/data/github_fixture_does_not_exist.json'"
+        },
+        {
+          "source": "notes",
+          "spec": {
+            "type": "notes",
+            "path": "data/notes_C-1003_empty.txt"
+          },
+          "error": "ValueError: notes file data/notes_C-1003_empty.txt is empty"
+        }
+      ]
+    }
+  ],
+  "run_errors": []
+}

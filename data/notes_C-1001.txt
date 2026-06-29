@@ -1,0 +1,8 @@
+Title: Senior Backend Engineer
+Location: Bengaluru, India
+
+Spoke with Asha on 2026-05-12. 6+ years of experience, currently at Northwind
+Labs leading the payments team. Strong Python and Django background, also
+comfortable with AWS and does some Go for internal infra tooling. Phone
++91 98765 43210. Open to relocating within India only, not interested in
+remote-only roles abroad right now.

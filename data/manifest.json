@@ -1,0 +1,35 @@
+{
+  "_comment": "Maps each internal candidate_id to the sources that belong to them, including the per-system identifiers each source uses to look the candidate up. This crosswalk is assumed to be supplied by an upstream orchestration layer; see design doc for why fuzzy cross-source identity matching is out of scope here.",
+  "candidates": [
+    {
+      "candidate_id": "C-1001",
+      "_label": "Asha Verma - clean, agreeing sources",
+      "sources": [
+        {"type": "csv", "path": "data/recruiter_export.csv", "match": {"column": "candidate_id", "value": "C-1001"}},
+        {"type": "ats_json", "path": "data/ats_export.json", "match": {"field": "applicant_ref", "value": "ATS-9001"}},
+        {"type": "github", "mode": "fixture", "fixture_path": "data/github_fixture_asha-verma.json"},
+        {"type": "notes", "path": "data/notes_C-1001.txt"}
+      ]
+    },
+    {
+      "candidate_id": "C-1002",
+      "_label": "Daniel Cho - conflicting title, no-country-code phone, casual skill abbreviations",
+      "sources": [
+        {"type": "csv", "path": "data/recruiter_export.csv", "match": {"column": "candidate_id", "value": "C-1002"}},
+        {"type": "ats_json", "path": "data/ats_export.json", "match": {"field": "applicant_ref", "value": "ATS-9002"}},
+        {"type": "github", "mode": "fixture", "fixture_path": "data/github_fixture_dcho-eng.json"},
+        {"type": "notes", "path": "data/notes_C-1002.txt"}
+      ]
+    },
+    {
+      "candidate_id": "C-1003",
+      "_label": "Priya Nair - garbage/missing sources: malformed ATS JSON, missing GitHub fixture, empty notes file",
+      "sources": [
+        {"type": "csv", "path": "data/recruiter_export.csv", "match": {"column": "candidate_id", "value": "C-1003"}},
+        {"type": "ats_json", "path": "data/ats_export_corrupt.json", "match": {"field": "applicant_ref", "value": "ATS-9003"}},
+        {"type": "github", "mode": "fixture", "fixture_path": "data/github_fixture_does_not_exist.json"},
+        {"type": "notes", "path": "data/notes_C-1003_empty.txt"}
+      ]
+    }
+  ]
+}

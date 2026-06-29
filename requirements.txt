@@ -1,0 +1,6 @@
+phonenumbers>=8.13
+python-dateutil>=2.9
+pycountry>=24.6
+
+# dev / test only
+pytest>=8.0

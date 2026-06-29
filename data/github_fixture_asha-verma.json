@@ -1,0 +1,15 @@
+{
+  "login": "asha-verma",
+  "name": "Asha Verma",
+  "bio": "Backend engineer. Payments & distributed systems.",
+  "location": "Bengaluru, India",
+  "html_url": "https://github.com/asha-verma",
+  "blog": "https://ashaverma.dev",
+  "company": "@northwind-labs",
+  "repos": [
+    {"name": "payflow", "language": "Python", "description": "Payments orchestration service"},
+    {"name": "infra-scripts", "language": "Python", "description": "Internal infra tooling"},
+    {"name": "k8s-helpers", "language": "Go", "description": "Kubernetes operator helpers"},
+    {"name": "old-portfolio", "language": "JavaScript", "description": "Old personal site"}
+  ]
+}

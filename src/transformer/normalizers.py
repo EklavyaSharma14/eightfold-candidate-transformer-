@@ -1,27 +1,16 @@
 """
-Field-level normalizers.
-
-Every normalizer follows the same contract:
-
-    normalize_X(raw, ...) -> (value, quality, note)
-
-- value   : the normalized value, or None if we genuinely can't produce one.
-            We NEVER invent a value we aren't reasonably sure of.
-- quality : 0.0-1.0, how much we trust the normalization itself (independent
-            of which source it came from). 1.0 = clean parse, lower = a
-            best-effort fallback was used (e.g. guessed a country to parse a
-            phone number, or guessed a month for a year-only date).
-- note    : short human-readable explanation, stored in provenance.
+Per-field normalizers. Each one returns (value, quality, note):
+value is None if we can't confidently produce one (never guess/invent),
+quality is 0-1 for how clean the parse was, note explains what happened
+(goes into provenance later).
 """
 import re
 import phonenumbers
 from dateutil import parser as dateutil_parser
 import pycountry
 
-# --------------------------------------------------------------------------
-# Phone numbers -> E.164
-# --------------------------------------------------------------------------
-DEFAULT_REGION = "US"  # used only when we have no other hint, ever
+# ---- phone numbers -> E.164 ----
+DEFAULT_REGION = "US"  # only used as a last-resort fallback
 
 def normalize_phone(raw, region_hint=None):
     if not raw or not str(raw).strip():
@@ -40,8 +29,8 @@ def normalize_phone(raw, region_hint=None):
         if region_hint:
             regions_to_try = [region_hint]
         else:
-            # No country code, no location hint: fall back, but mark the
-            # result as a guess rather than a clean parse.
+            # no country code and nothing to guess from -> still try, but
+            # don't pretend this is a clean parse
             regions_to_try = [DEFAULT_REGION]
             quality = 0.7
 
@@ -69,13 +58,11 @@ def to_national_display(e164_value):
         return e164_value
 
 
-# --------------------------------------------------------------------------
-# Dates -> YYYY-MM
-# --------------------------------------------------------------------------
+# ---- dates -> YYYY-MM ----
 CURRENT_MARKERS = {"present", "current", "now", "ongoing", "till date", "to date"}
 
 def normalize_date(raw):
-    """Returns (value, quality, note, is_current)."""
+    """(value, quality, note, is_current)"""
     if raw is None:
         return None, 0.0, "missing date", False
     s = str(raw).strip()
@@ -84,11 +71,10 @@ def normalize_date(raw):
     if s.lower() in CURRENT_MARKERS:
         return None, 1.0, "open-ended / still current", True
 
-    # Year only, e.g. "2019"
+    # just a year, e.g. "2019" -- don't pretend we know the month
     if re.fullmatch(r"(19|20)\d{2}", s):
         return f"{s}-01", 0.6, "year only; month unknown, defaulted to 01", False
 
-    # YYYY-MM already
     if re.fullmatch(r"(19|20)\d{2}-\d{2}", s):
         return s, 1.0, "already YYYY-MM", False
 
@@ -99,9 +85,7 @@ def normalize_date(raw):
         return None, 0.0, f"could not parse date '{s}'", False
 
 
-# --------------------------------------------------------------------------
-# Country -> ISO 3166-1 alpha-2
-# --------------------------------------------------------------------------
+# ---- country -> ISO 3166-1 alpha-2 ----
 COUNTRY_ALIASES = {
     "usa": "US", "u.s.a.": "US", "us": "US", "united states": "US",
     "united states of america": "US",
@@ -135,9 +119,7 @@ def normalize_country(raw):
     return None, 0.0, f"unrecognized country '{s}'"
 
 
-# --------------------------------------------------------------------------
-# Skills -> canonical name
-# --------------------------------------------------------------------------
+# ---- skills -> canonical name ----
 SKILL_ALIASES = {
     "js": "JavaScript", "javascript": "JavaScript", "node": "Node.js",
     "node.js": "Node.js", "nodejs": "Node.js",
@@ -168,9 +150,9 @@ def canonical_skill(raw):
     return cleaned, 0.6, f"no canonical alias for '{raw}'; used as-is"
 
 
-# --------------------------------------------------------------------------
-# Names / free text -> trimmed, whitespace-collapsed (NOT re-cased)
-# --------------------------------------------------------------------------
+# ---- names / free text -- trim + collapse whitespace, don't re-case ----
+# (titlecasing breaks real names like "O'Brien" or "McDonald", so leave
+# case exactly as given)
 def normalize_name(raw):
     if not raw or not str(raw).strip():
         return None, 0.0, "empty name"

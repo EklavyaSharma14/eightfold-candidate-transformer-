@@ -1,5 +1,5 @@
 {
-  "_comment": "Maps each internal candidate_id to the sources that belong to them, including the per-system identifiers each source uses to look the candidate up. This crosswalk is assumed to be supplied by an upstream orchestration layer; see design doc for why fuzzy cross-source identity matching is out of scope here.",
+  "_comment": "maps each candidate_id to where their data lives in each source. Assuming this crosswalk comes from an upstream system - see design doc for why",
   "candidates": [
     {
       "candidate_id": "C-1001",

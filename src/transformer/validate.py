@@ -1,9 +1,8 @@
 """
-Final validation gate: checked AFTER projection, right before the pipeline
-hands output back to the caller. This is intentionally a *second*, simpler
-pass on top of project()'s own checks -- the point is that nothing leaves
-the pipeline without an explicit "this matches what was asked for" check,
-rather than trusting the projection step never to regress.
+Runs after project(), right before the pipeline hands output back. Yes,
+project() already does some checking -- this is a separate, simpler pass
+so a future bug in projection can't silently slip an output through
+without anything catching it.
 """
 
 VALID_TYPES = {"string", "number", "boolean", "string[]", "object", "object[]"}

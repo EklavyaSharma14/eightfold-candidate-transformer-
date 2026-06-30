@@ -1,15 +1,12 @@
 """
-Pipeline orchestrator.
+Wires everything together. run_pipeline() takes a manifest + optional
+config and runs detect -> extract -> normalize -> merge -> confidence ->
+project -> validate for every candidate in it.
 
-run_pipeline() is the only entry point most callers need: give it a
-manifest (which sources belong to which candidate) and an optional
-runtime config, and it walks detect -> extract -> normalize -> merge ->
-confidence -> project -> validate for every candidate.
-
-A failure on ONE candidate (bad config, every source missing, whatever)
-is captured and reported -- it never takes down the rest of the batch.
-That's the difference between this being "robust at thousands of
-candidates" and just "robust on the happy path".
+One candidate failing (bad config, every source broken, etc) doesn't take
+the rest of the batch down with it -- that's the whole point of catching
+errors this granularly instead of just wrapping the loop in one big
+try/except.
 """
 import json
 import os

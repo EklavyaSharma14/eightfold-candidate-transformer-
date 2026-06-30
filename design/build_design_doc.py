@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the one-page Step 2 design document as a PDF."""
+"""Generates the one-page Step 1 design document as a PDF."""
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -43,82 +43,103 @@ def bullets(items):
 
 story.append(Paragraph("Pipeline", h_style))
 story.append(Paragraph(
-    "<b>detect → extract → normalize → merge → confidence → project → validate.</b> "
-    "Detect dispatches each manifest entry to the right extractor. Extract pulls a loosely-canonical "
-    "raw record out of each source (this is where ATS's own field names get remapped onto our concepts), "
-    "wrapped so a bad source produces a logged error, never a crash. Normalize converts per-field raw "
-    "values into our canonical formats. Merge combines normalized values across sources into one record "
-    "with conflict resolution. Confidence scores every populated field. Project reshapes the canonical "
-    "record per the runtime config. Validate checks the projected output's shape before returning it.",
+    "I broke the pipeline into seven stages: <b>detect → extract → normalize → merge → "
+    "confidence → project → validate.</b> Detect just figures out, from the manifest, which "
+    "extractor each source needs. Extract pulls a raw, not-yet-normalized record out of each "
+    "source — this is also where ATS's own field names get remapped onto the fields I actually "
+    "use — and is wrapped so that a bad source produces a logged error rather than a crash. "
+    "Normalize converts each raw field into a standard format. Merge combines the normalized "
+    "values across sources into one record and resolves any conflicts along the way. Confidence "
+    "scores every field that ended up populated. Project reshapes the canonical record according "
+    "to whatever runtime config was passed in. Validate is a last check on the projected output's "
+    "shape before it gets returned.",
     body_style))
 
 story.append(Paragraph("Canonical Schema &amp; Normalized Formats", h_style))
 story.append(Paragraph(
-    "Default schema matches the brief's table (candidate_id, full_name, emails[], phones[], location, "
-    "links, headline, years_experience, skills[], experience[], education[], provenance[], "
-    "overall_confidence), plus <b>source_errors</b> (which sources were skipped and why — answers "
-    "\"why is this profile thin?\" the same way provenance answers \"why is this value what it is?\").", body_style))
+    "The default schema follows the brief's table (candidate_id, full_name, emails[], phones[], "
+    "location, links, headline, years_experience, skills[], experience[], education[], "
+    "provenance[], overall_confidence). I added one extra field, <b>source_errors</b>, which logs "
+    "which sources failed and why for a given candidate — it answers \"why is this profile thin?\" "
+    "the same way provenance answers \"why is this particular value what it is?\"", body_style))
 story.append(bullets([
-    "<b>Phones</b> → E.164 (<i>phonenumbers</i>). No country code + no location hint → falls back to a "
-    "configured default region, but flagged as a guess (lower confidence), never presented as a clean parse.",
-    "<b>Dates</b> → YYYY-MM. Year-only (\"2019\") → 2019-01 with an explicit low-precision note, not a "
-    "confident-looking fake month. \"Present\"/\"Current\" → open-ended (null end), not coerced into a real date.",
-    "<b>Country</b> → ISO 3166-1 alpha-2 (<i>pycountry</i> + alias table). 2-letter tokens are checked "
-    "against US state codes <i>before</i> country lookup, so \"San Francisco, CA\" doesn't resolve to Canada.",
-    "<b>Skills</b> → canonical name via an alias table (\"js\"/\"JS\" → JavaScript). Unknown skills are kept "
-    "as-is with reduced confidence rather than dropped.",
-    "<b>Names</b> → trimmed/whitespace-collapsed only, never re-cased — auto-titlecasing breaks real names "
-    "(\"O'Brien\") and is exactly the confident-but-wrong move the brief warns against.",
+    "<b>Phones</b> normalize to E.164 using the <i>phonenumbers</i> library. If there's no country "
+    "code and no location hint to infer one from, it falls back to a default region but flags the "
+    "result as a guess (lower confidence) rather than treating it like a clean parse.",
+    "<b>Dates</b> become YYYY-MM. A year-only value like \"2019\" becomes 2019-01 but with an "
+    "explicit low-precision note attached — I didn't want a default month to look any more certain "
+    "than it actually is. \"Present\"/\"Current\" are treated as open-ended (null end date) instead "
+    "of being forced into a real date.",
+    "<b>Country</b> normalizes to ISO 3166-1 alpha-2 using <i>pycountry</i> plus a small alias table. "
+    "Two-letter tokens get checked against US state abbreviations before the country lookup runs, "
+    "so something like \"San Francisco, CA\" doesn't get misread as Canada.",
+    "<b>Skills</b> map to a canonical name through an alias table (\"js\"/\"JS\" → JavaScript). "
+    "Anything not in the table gets kept as-is, just with reduced confidence, rather than dropped.",
+    "<b>Names</b> only get trimmed and have whitespace collapsed — never re-cased. Auto-titlecasing "
+    "breaks real names (think \"O'Brien\"), and that felt like exactly the kind of mistake worth "
+    "avoiding on purpose.",
 ]))
 
 story.append(Paragraph("Merge &amp; Conflict-Resolution Policy", h_style))
 story.append(Paragraph(
-    "<b>Match key:</b> an upstream manifest supplies the crosswalk (which CSV row / ATS record / GitHub "
-    "fixture / notes file belongs to a given candidate_id) — see Descoped.", body_style))
+    "<b>Match key:</b> I'm assuming an upstream manifest already supplies the crosswalk — which "
+    "CSV row, ATS record, GitHub fixture, and notes file all belong to a given candidate_id. More "
+    "on why under Out of Scope.", body_style))
 story.append(Paragraph(
-    "<b>Scalar fields</b> (name, headline, years_experience, location): winner-take-all by a per-field "
-    "source-priority table (e.g. ATS &gt; CSV &gt; GitHub &gt; notes for title; GitHub &gt; notes &gt; ATS "
-    "for skills, since code is more objective evidence than a recruiter's guess). field_confidence = "
-    "source_weight × normalization_quality; agreeing sources add a bonus (capped at 1.0); disagreeing ones "
-    "cost a penalty. One strong source beats two weak ones that agree with each other — majority vote among "
-    "low-priority sources does not override a single high-priority one. Every losing value is kept in "
-    "provenance, never discarded.", body_style))
+    "<b>Scalar fields</b> (name, headline, years_experience, location) are winner-take-all, decided "
+    "by a per-field source-priority table — ATS beats CSV beats GitHub beats notes for job title, "
+    "for example, but for skills GitHub and notes outrank ATS and CSV, since actual code is more "
+    "objective evidence than a recruiter's guess. field_confidence works out to source_weight times "
+    "normalization_quality, with agreeing sources adding a small bonus (capped at 1.0) and "
+    "disagreeing ones costing a penalty. A single high-priority source still beats two low-priority "
+    "ones that happen to agree with each other — it's a hierarchy, not a vote. Whatever loses still "
+    "gets kept in provenance rather than thrown away.", body_style))
 story.append(Paragraph(
-    "<b>List fields</b> (emails, phones, skills, experience, education): unioned and deduplicated, not "
-    "winner-take-all — a candidate can legitimately have two emails, not two \"true\" current titles. "
-    "<b>overall_confidence</b> = sum of populated-field confidences ÷ a <i>fixed</i> field count, so a thin "
-    "profile scores low rather than being inflated by the few confident fields it happens to have.", body_style))
+    "<b>List fields</b> (emails, phones, skills, experience, education) just get unioned and "
+    "deduplicated instead of picking a winner — someone can genuinely have two emails, but not two "
+    "different \"true\" current titles. <b>overall_confidence</b> is the sum of populated-field "
+    "confidences divided by a fixed field count, so a thin profile scores low instead of looking "
+    "artificially confident just because the few fields it does have are solid.", body_style))
 
 story.append(Paragraph("Runtime Config (Projection Layer)", h_style))
 story.append(Paragraph(
-    "The full canonical record is always built first; the config is a pure downstream lens with no special "
-    "casing — the <b>default schema runs through the same projection code path</b> as any custom config, "
-    "which is what makes \"no code changes\" structural rather than a promise. Each field spec has "
-    "<i>path</i> (output key), <i>from</i> (canonical path, supports emails[0] / skills[].name addressing), "
-    "<i>type</i>, optional <i>required</i> and <i>normalize</i> (override the display form of an already-"
-    "normalized value, e.g. E.164 → national). Top-level toggles: include_confidence (also strips per-skill "
-    "confidence), include_provenance (also gates source_errors), on_missing ∈ {null, omit, error}. "
-    "<b>error</b> fails loud for that one candidate in a batch — it does not take down the rest.", body_style))
+    "The full canonical record always gets built first — the config only acts as a downstream lens "
+    "on top of it, with no special-casing anywhere. The default schema actually runs through the "
+    "same projection function as any custom config does, which is what makes \"no code changes\" "
+    "true in practice rather than just something I'm claiming. Each field in a config has a "
+    "<i>path</i> (the output key), a <i>from</i> (the canonical path it pulls from — supports "
+    "addressing like emails[0] or skills[].name), a <i>type</i>, and optionally <i>required</i> and "
+    "<i>normalize</i> (to override the display form of an already-normalized value, e.g. E.164 → "
+    "national format). A few top-level toggles control the rest: include_confidence (also strips "
+    "per-skill confidence when off), include_provenance (also gates source_errors), and on_missing, "
+    "which can be null, omit, or error. error fails loudly for that one candidate specifically — it "
+    "doesn't take the rest of a batch down with it.", body_style))
 
 story.append(Paragraph("Edge Cases Handled", h_style))
 story.append(bullets([
-    "<b>Missing/corrupt source</b> (malformed JSON, missing file, empty notes) — logged in source_errors "
-    "and skipped; candidate still gets a profile from whatever survives.",
-    "<b>Conflicting values</b> — priority-based winner; loser kept in provenance with the reason.",
-    "<b>Partial/messy dates</b> — best-effort to YYYY-MM; year-only flagged low-precision, never a fabricated month.",
-    "<b>Phone with no country code or location hint</b> — default-region guess, explicitly flagged, "
-    "or null if it still doesn't validate — never invented.",
-    "<b>Same skill, different casing/spelling</b> — canonicalized and merged into one entry with combined sources.",
+    "Missing or corrupt sources (malformed JSON, a missing file, empty notes) get logged in "
+    "source_errors and skipped — the candidate still gets a profile built from whatever's left.",
+    "Conflicting values resolve by priority, with the loser kept in provenance along with why it lost.",
+    "Messy dates get a best-effort YYYY-MM parse; year-only values are flagged low-precision instead "
+    "of guessing a month with false confidence.",
+    "A phone with no country code and no location hint to infer one falls back to a default-region "
+    "guess that's explicitly flagged, or just null if it still won't validate — nothing's invented.",
+    "The same skill written differently across sources gets canonicalized into a single entry with "
+    "all contributing sources combined.",
 ]))
 
-story.append(Paragraph("Deliberately Out of Scope (time-boxed)", h_style))
+story.append(Paragraph("What I Left Out (and Why)", h_style))
 story.append(Paragraph(
-    "Fuzzy cross-source identity resolution with no shared ID (its own ML/heuristics project — pushed to the "
-    "manifest layer here); resume PDF/DOCX parsing (used GitHub + notes as the unstructured pair instead; the "
-    "extractor interface is pluggable so a resume extractor is one more module, not a redesign); live GitHub "
-    "API calls in the test suite (cached fixture used instead, for deterministic/offline runs — the live-fetch "
-    "path exists but isn't exercised by tests); NER-based skill extraction from free text (dictionary + keyword "
-    "matching only); any UI beyond a CLI.", body_style))
+    "Fuzzy cross-source identity resolution when there's no shared ID — matching records across "
+    "systems without one is its own project, so I pushed that assumption up to the manifest layer "
+    "instead of trying to half-solve it here. Resume PDF/DOCX parsing — I used GitHub and notes as "
+    "my two unstructured sources instead, since resume layouts vary enough that doing this properly "
+    "felt like a separate effort; the extractor interface is the same shape for every source type "
+    "though, so adding a resume extractor later is one more function, not a redesign. Live GitHub "
+    "API calls in the test suite — a cached fixture is used instead so results stay deterministic "
+    "and the tests run offline (the live-fetch code path exists, it just isn't exercised by tests). "
+    "NER-based skill extraction from free text — dictionary and keyword matching only. And no UI "
+    "beyond a CLI, since the brief explicitly said that was lower priority.", body_style))
 
 doc.build(story)
 print(f"Wrote {OUT_PATH}")

@@ -1,12 +1,10 @@
 """
-Projection layer: turns the rich internal canonical record into whatever
-shape the caller asked for.
+Reshapes the canonical record into whatever output shape was asked for.
 
-The DEFAULT_CONFIG below mirrors the assignment's default output schema --
-and it runs through *exactly* the same code path as any custom config. The
-default schema isn't special-cased anywhere; it's just the config we use
-when the caller doesn't supply one. That's what makes "no code changes"
-for a custom config true rather than aspirational.
+DEFAULT_CONFIG below is just the assignment's default schema written as a
+config -- it goes through the exact same project() function as any custom
+config someone passes in. No special-casing, which is the point: it's how
+a custom config can change the output without touching this file at all.
 """
 import re
 from . import normalizers as norm

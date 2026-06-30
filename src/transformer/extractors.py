@@ -1,11 +1,9 @@
 """
-Source extractors.
+One function per source type. Each takes a `spec` (an entry from the
+manifest) and base_dir, returns (raw_record, source_type, error_or_None).
 
-Each extractor takes a `spec` (one entry from the manifest) plus a base_dir,
-and returns (raw_record, source_type, error_or_None).
-
-raw_record is a loosely-canonical dict -- whatever fields this source could
-plausibly contribute, in *raw* (not yet normalized) form:
+raw_record is loosely-canonical -- whatever this source could plausibly
+contribute, still in raw/unnormalized form:
 
     {
         "full_name": str|None,
@@ -21,11 +19,11 @@ plausibly contribute, in *raw* (not yet normalized) form:
                        "portfolio": str|None, "other": [str, ...]},
     }
 
-An extractor NEVER raises for "the data inside the file was odd" -- it does
-its best and leaves fields out. It DOES raise (caught by the caller) for
-"the source itself is unusable" -- file missing, JSON unparsable, no
-matching record found. The pipeline turns that into a logged, skipped
-source rather than a crash.
+Extractors don't raise for "the data inside the file looked weird" -- they
+just leave fields blank. They DO raise for "the source itself can't be
+read" (missing file, bad JSON, no matching record) -- extract_source()
+below catches that and turns it into a logged, skipped source instead of
+crashing the whole run.
 """
 import csv
 import json
@@ -54,9 +52,7 @@ def empty_record():
     }
 
 
-# --------------------------------------------------------------------------
-# Structured source #1: recruiter CSV export
-# --------------------------------------------------------------------------
+# ---- recruiter CSV export (structured #1) ----
 def extract_csv(spec, base_dir):
     path = _path(base_dir, spec["path"])
     match = spec["match"]
@@ -88,14 +84,12 @@ def extract_csv(spec, base_dir):
     return rec
 
 
-# --------------------------------------------------------------------------
-# Structured source #2: ATS JSON blob (its own field names, on purpose)
-# --------------------------------------------------------------------------
+# ---- ATS JSON blob -- own field names on purpose, gets remapped below ----
 def extract_ats_json(spec, base_dir):
     path = _path(base_dir, spec["path"])
     match = spec["match"]
     with open(path, encoding="utf-8") as f:
-        records = json.load(f)  # raises json.JSONDecodeError if malformed -> caught upstream
+        records = json.load(f)  # bad JSON -> JSONDecodeError, caught by the caller
     found = [r for r in records if str(r.get(match["field"])) == str(match["value"])]
     if not found:
         raise ValueError(f"no ATS record in {spec['path']} where {match['field']}={match['value']!r}")
@@ -132,12 +126,10 @@ def extract_ats_json(spec, base_dir):
     return rec
 
 
-# --------------------------------------------------------------------------
-# Unstructured source #1: GitHub profile
-# mode="fixture" reads a cached JSON file shaped like the GitHub API
-# (used by default + all tests, for determinism).
-# mode="live" hits the real public API -- best-effort, never crashes.
-# --------------------------------------------------------------------------
+# ---- GitHub profile (unstructured #1) ----
+# fixture mode reads a cached JSON file shaped like the real GitHub API --
+# that's what default config + all the tests use, so results are
+# deterministic. live mode actually hits the API (see below).
 def extract_github(spec, base_dir):
     mode = spec.get("mode", "fixture")
     if mode == "fixture":
@@ -189,16 +181,14 @@ def _fetch_github_live(username):
         return None
 
 
-# --------------------------------------------------------------------------
-# Unstructured source #2: free-text recruiter notes
-# --------------------------------------------------------------------------
+# ---- free-text recruiter notes (unstructured #2) ----
 EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 PHONE_RE = re.compile(r"(\+?\d[\d\-\s().]{6,}\d)")
 YEARS_RE = re.compile(r"(\d+(?:\.\d+)?)\+?\s*(?:years|yrs)\b", re.IGNORECASE)
 URL_RE = re.compile(r"https?://[^\s,)]+")
 
-# Reuse the same alias dictionary the normalizer canonicalizes against,
-# rather than maintaining a second, easily-out-of-sync vocabulary list.
+# reuse the normalizer's alias dict instead of keeping a second skill list
+# that would drift out of sync
 from .normalizers import SKILL_ALIASES  # noqa: E402
 NOTES_SKILL_VOCAB = sorted(SKILL_ALIASES.keys(), key=len, reverse=True)
 
@@ -218,12 +208,12 @@ def extract_notes(spec, base_dir):
 
     phone_match = re.search(r"phone[:\s]+" + PHONE_RE.pattern, text, re.IGNORECASE)
     if not phone_match:
-        # No explicit "Phone:" label found -- fall back to a bare scan, which
-        # is noisier (e.g. it can mistake a date like "2026-05-12" for a
-        # phone-shaped string of digits and separators). Worth flagging:
-        # this is exactly the kind of free-text ambiguity normalize_phone()
-        # is the real safety net for -- a bad match here just fails to
-        # validate downstream rather than polluting the profile.
+        # no "Phone:" label -- fall back to a bare scan. Found a real bug
+        # here during testing: without the label, this regex once grabbed
+        # a date ("2026-05-12...") instead of the actual number. Left the
+        # fallback in since it's still better than nothing, but it's the
+        # noisier path -- normalize_phone() downstream will just reject it
+        # if it isn't actually valid.
         phone_match = PHONE_RE.search(text)
     if phone_match:
         rec["phones"] = [phone_match.group(1).strip()]

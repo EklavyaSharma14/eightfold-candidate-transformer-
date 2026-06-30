@@ -1,27 +1,20 @@
 """
-Merge stage: takes the raw records pulled from each source for one
-candidate, normalizes every value, and merges them into a single canonical
-record with per-field confidence and a full provenance trail.
+Merges the raw, normalized records from each source for one candidate
+into a single canonical record, with per-field confidence + provenance.
 
-Scalar fields (full_name, headline, years_experience, location) are
-winner-take-all: every source's normalized value is scored, the highest
-score wins, and the rest are kept in provenance as "lost" alternatives.
-
-List fields (emails, phones, skills, experience, education) are unioned and
-deduplicated -- a candidate legitimately can have two emails, but can't
-have two "true" current titles.
+Scalar fields (name, headline, years_experience, location) are winner-take-
+all -- score every source's value, highest wins, losers stay in provenance.
+List fields (emails, phones, skills, experience, education) just get
+unioned and deduped, since you can genuinely have two emails but not two
+"true" job titles.
 """
 import re
 from . import normalizers as norm
 from .source_priority import weight_for
 
-# 2-letter US state codes collide with real ISO country codes (CA=Canada,
-# IN=India, ...). A location string like "San Francisco, CA" means
-# California, not Canada -- catch that BEFORE handing the token to the
-# country normalizer, which would otherwise confidently return the wrong
-# country. This is exactly the "wrong-but-confident" failure mode the brief
-# warns about, so it gets a dedicated (lower-confidence, clearly-noted) path
-# rather than silent misuse of normalize_country.
+# 2-letter US state codes overlap with real ISO country codes (CA=Canada,
+# IN=India...) so "San Francisco, CA" would get misread as Canada if we
+# just threw the last token at normalize_country(). Catch it here instead.
 US_STATE_ABBR = {
     "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID",
     "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",

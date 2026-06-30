@@ -1,220 +1,139 @@
-# Eightfold Multi-Source Candidate Data Transformer
+# Multi-Source Candidate Data Transformer
 
-Turns messy candidate data from multiple systems into one clean, canonical
-profile per candidate — normalized formats, deduplicated values, and a
-full record of where every value came from and how confident we are in it.
+This is my submission for the Eightfold engineering intern assignment (Jul-Dec 2026). The short version: it pulls candidate info from four different, messy sources and produces one clean profile per candidate, with a confidence score and a record of exactly where every value came from.
 
-Built for the Eightfold Engineering Intern (Jul–Dec 2026) assignment. The
-design rationale lives in `design/` (the one-pager); this README is about
-running the thing.
+The full reasoning behind the design choices is in `design/` as a one-pager. This file is more about how to actually run things and what's where.
 
-## Quick start
+## Running it
 
 ```bash
-pip install -r requirements.txt --break-system-packages   # or use a venv
+pip install -r requirements.txt --break-system-packages   # or just use a venv if you'd rather
 
-# Default output schema, all 3 sample candidates:
+# default schema, all 3 sample candidates
 python cli.py run --manifest data/manifest.json --pretty
 
-# A custom runtime config (renamed/subset fields, national phone format,
-# provenance off, missing-required-field errors loudly):
+# a custom config - subset/rename fields, national phone format, on_missing=error
 python cli.py run --manifest data/manifest.json --config configs/recruiter_lite.json --pretty
 
-# Write to a file instead of stdout:
+# write to a file instead of printing
 python cli.py run --manifest data/manifest.json --out outputs/default_output.json --pretty
 
-# Run the tests:
+# tests
 python -m pytest tests/ -v
 ```
 
-No API keys or network access needed — the GitHub source uses a cached
-fixture by default (see "Sources used" below).
+Doesn't need network access or any API keys - GitHub is read from a cached fixture by default, more on that below.
 
-## What's in `data/`
+## The sample candidates
 
-Three fabricated candidates, deliberately built to exercise the merge
-logic rather than to look tidy:
+I made up three candidates instead of using real data, mostly so I could engineer specific situations into the test data rather than hoping real data happened to have interesting edge cases.
 
-| Candidate | What it's testing |
-|---|---|
-| **C-1001** Asha Verma | Sources mostly agree → high confidence, clean multi-source merge, agreement boosts. |
-| **C-1002** Daniel Cho | A real conflict (ATS says "Senior Software Engineer", CSV *and* notes both say "Software Engineer II") — proves a single high-priority source beats two low-priority sources that agree with each other. Also: a phone with no country code, and skills written as casual abbreviations ("JS", "Py") in free text. |
-| **C-1003** Priya Nair | The "garbage source" candidate: a malformed ATS JSON file, a GitHub fixture path that doesn't exist, and an empty notes file. Only the CSV survives. Confirms the pipeline doesn't crash and that `overall_confidence` honestly reflects how little corroboration the profile has. |
+**C-1001, Asha Verma** — everything basically agrees across all four sources. This is the baseline / happy path, ends up with overall_confidence around 0.92.
 
-`data/manifest.json` is the orchestration layer's crosswalk: for each
-`candidate_id`, which row/record/file in each system belongs to them (see
-**Assumptions** below for why this is a deliberate scope boundary, not an
-oversight).
+**C-1002, Daniel Cho** — has a real conflict. His CSV and his recruiter notes both say "Software Engineer II", but the ATS record says "Senior Software Engineer". I used this one to prove that priority weighting actually works - one trustworthy source should beat two weaker ones that happen to agree with each other, not the other way around. Also threw in a phone number with no country code and some skills written in shorthand ("js", "py") to test normalization.
 
-## Sources used
+**C-1003, Priya Nair** — basically everything that could go wrong, does. The ATS JSON file has a syntax error in it (missing closing brace situation, deliberately), the GitHub fixture path points at a file that doesn't exist, and the notes file is just empty. Only the CSV survives. This tests that the pipeline degrades gracefully instead of just crashing, and that the confidence score honestly reflects how thin the resulting profile is (it comes out around 0.53, noticeably lower than Asha's).
 
-Two structured, two unstructured (the brief asks for at least one of
-each):
+`data/manifest.json` ties candidate IDs to which file/record in each source belongs to them - see the Assumptions section for why I didn't try to solve that matching problem automatically.
 
-- **CSV** (`data/recruiter_export.csv`) — recruiter export, our own column names.
-- **ATS JSON** (`data/ats_export.json`) — its *own* field names on purpose
-  (`applicant_name`, `mobile_number`, `city_country`, `work_history`, ...),
-  remapped in `extractors.py`.
-- **GitHub profile** (`data/github_fixture_*.json`) — a cached JSON
-  fixture shaped like the real GitHub API (`/users/{u}` + `/users/{u}/repos`
-  merged). `extractors.py` also has a `mode="live"` path that hits the real
-  API with `urllib` and fails soft (returns nothing usable rather than
-  raising) — it's just not exercised by the tests, so CI/grading stays
-  deterministic and offline.
-- **Recruiter notes** (`data/notes_*.txt`) — free text, parsed with
-  regex/keyword heuristics for email, phone, years of experience, a couple
-  of labeled lines (`Title:`, `Location:`), and skill mentions (matched
-  against the same alias dictionary the normalizer canonicalizes against).
+## The four sources
 
-## Pipeline
+Two structured, two unstructured, per the brief:
+
+- **CSV** (`data/recruiter_export.csv`) — a recruiter export, fairly clean column names.
+- **ATS JSON** (`data/ats_export.json`) — uses its own field names on purpose (`applicant_name`, `mobile_number`, `city_country`, `work_history`...) since that's realistic for a real ATS export, and `extractors.py` maps those onto our own field names.
+- **GitHub profile** (`data/github_fixture_*.json`) — a cached fixture shaped like the actual GitHub API response. There's also a `mode="live"` path in extractors.py that hits the real API, but it's not used by tests so things stay deterministic and runnable offline.
+- **Recruiter notes** (`data/notes_*.txt`) — plain text, parsed with some regex and keyword matching for email/phone/years of experience, plus a couple labeled lines like `Title:` and `Location:`, and skill mentions matched against the same alias table the normalizer uses.
+
+## How it's structured
 
 ```
-detect → extract → normalize → merge → confidence → project → validate
+detect -> extract -> normalize -> merge -> confidence -> project -> validate
 ```
 
-- `extractors.py` — one function per source type, pulls a raw,
-  not-yet-normalized record out of each source. Never raises for "the data
-  was weird"; only raises for "the source itself is unusable" (missing
-  file, bad JSON, no matching record) — and even that is caught one level
-  up and turned into a logged, skipped source.
-- `normalizers.py` — phone → E.164 (`phonenumbers`), date → `YYYY-MM`
-  (best-effort, flags year-only dates as low precision, treats
-  "Present"/"Current" as open-ended rather than inventing an end date),
-  country → ISO 3166-1 alpha-2 (`pycountry` + a small alias table, with a
-  deliberate guard against reading a US state code like `CA` as the
-  country Canada), skill → canonical name via an alias table. Names are
-  trimmed/whitespace-collapsed but **never re-cased** — auto-titlecasing
-  breaks real names ("O'Brien"), which is exactly the kind of
-  confident-but-wrong move the brief warns against.
-- `merge.py` — per-field source-priority weights (see `source_priority.py`)
-  decide who wins a conflict; agreeing sources boost confidence, disagreeing
-  ones cost some. List fields (emails, phones, skills, experience,
-  education) are unioned and deduplicated, not winner-take-all. Every
-  contributing and overridden value is kept in `provenance`.
-- `project.py` — the runtime-config / projection layer. The **default
-  output schema runs through the exact same code path** as any custom
-  config (`DEFAULT_CONFIG` in `project.py`); there's no separate
-  "default mode" branch to keep in sync.
-- `validate.py` — a second, independent pass after projection that checks
-  the actual output matches what the config asked for, before the
-  pipeline hands it back.
+`extractors.py` has one function per source type that pulls raw data out. These never throw an error just because the data inside looks weird - they only raise when the source itself can't be read at all (file missing, bad JSON, no matching record), and even then it's caught one level up and logged instead of crashing anything.
 
-## Runtime config (the "required twist")
+`normalizers.py` handles phone numbers (-> E.164 via the `phonenumbers` library), dates (-> YYYY-MM, with year-only dates flagged as lower precision instead of guessing a month, and "Present"/"Current" treated as open-ended rather than a fake end date), countries (-> ISO alpha-2 codes, with a manual check for US state abbreviations so "CA" doesn't get read as Canada), and skills (-> a canonical name via an alias dictionary). Names just get trimmed and whitespace-collapsed, not re-cased, since auto-titlecasing breaks names like O'Brien.
+
+`merge.py` is where conflicts actually get resolved. Each field has a priority table (in `source_priority.py`) saying which source to trust more for that particular field. Agreeing sources bump confidence up a bit, disagreeing ones bring it down. List-type fields (emails, skills, etc.) get unioned instead of picking a winner, since a person can genuinely have two emails but not two different "current" job titles.
+
+`project.py` is the config layer. The default output schema is literally just the config the brief describes, written down as a Python dict, and it goes through the exact same `project()` function as any custom config would. That's what makes it possible to reshape the output without touching this file.
+
+`validate.py` runs after projection, as a second pass checking the output actually matches what was asked for before the pipeline returns anything.
+
+## The runtime config part
 
 ```bash
 python cli.py run --manifest data/manifest.json --config configs/recruiter_lite.json --pretty
 ```
 
-`configs/recruiter_lite.json` demonstrates every knob from the brief in one
-file: subsetting fields, renaming (`id` ← `candidate_id`), pulling from an
-array index (`emails[0]`), overriding normalization (`phones[0]` displayed
-as a national-format string instead of E.164), turning provenance off
-while keeping confidence on, and `on_missing: "error"` — which, on the
-sample data, fires for exactly **one** candidate (C-1003 has no surviving
-source for `years_experience`) while C-1001 and C-1002 succeed normally.
-That one failure shows up as an error record for that candidate; it does
-not take down the rest of the batch.
+`configs/recruiter_lite.json` is the example I built to cover all the things the brief mentions - subsetting fields, renaming them (`id` instead of `candidate_id`), pulling a specific array index (`emails[0]`), overriding how a value gets displayed (`phones[0]` shown in national format instead of raw E.164), turning provenance off while leaving confidence on, and `on_missing: "error"`.
 
-Config shape:
+That last one is worth a closer look - on the sample data it fires for exactly one candidate. C-1003 doesn't have a surviving source for `years_experience` (her ATS record, which would've had it, is the one that's corrupted), so that candidate comes back as an error record while C-1001 and C-1002 process fine. One bad candidate doesn't take the rest of the batch down.
+
+Config shape, roughly:
 ```jsonc
 {
   "fields": [
     { "path": "<output key>", "from": "<canonical.path[0]>", "type": "string|number|boolean|string[]|object|object[]", "required": true, "normalize": "national" }
   ],
-  "include_confidence": true,   // also strips per-skill confidence when false
-  "include_provenance": true,   // also controls source_errors (see below)
+  "include_confidence": true,
+  "include_provenance": true,
   "on_missing": "null|omit|error"
 }
 ```
 
-`from` supports `field`, `field.subfield`, `field[0]`, and `field[].subfield`
-(maps over every item in a list, e.g. `skills[].name`).
+`from` paths support `field`, `field.subfield`, `field[0]`, and `field[].subfield` (the last one maps over a whole list, e.g. `skills[].name` to get just the names).
 
-## Output schema (default)
+## Output schema
 
-Matches the brief's table, plus one addition: `source_errors` (which
-sources we tried and skipped, and why), surfaced alongside `provenance`
-since both answer "why does this profile look the way it does." It's
-controlled by the same `include_provenance` toggle.
+Matches what's in the brief, plus one thing I added: `source_errors`, which lists which sources failed and why for a given candidate. It sits next to `provenance` since both are basically answering "why does this profile look the way it does", and it's controlled by the same `include_provenance` toggle.
 
-## Assumptions
+## Assumptions I made
 
-- **Cross-source identity is given, not inferred.** The manifest tells us
-  which CSV row / ATS record / GitHub fixture / notes file belongs to a
-  given `candidate_id`. Matching "Bob Smith" the resume to `bsmith92` on
-  GitHub with no shared identifier is a real, separate ML/heuristics
-  problem — see **Descoped** below.
-- A recruiter CSV export realistically includes a `location` and
-  `start_date` column even though the brief's example only lists
-  name/email/phone/current_company/title; kept since it's "yours to
-  refine" and it's what a real export looks like.
-- Location strings are parsed as `City[, Region][, Country]` by naive
-  comma-splitting. Good enough for the sample data; a 2-letter token in
-  the country slot is checked against US state codes first (so "San
-  Francisco, CA" doesn't resolve to Canada) before trying country lookup.
+- I'm assuming the manifest already knows which record in each system belongs to which candidate. Actually figuring that out automatically - matching "Bob Smith" the resume to `bsmith92` on GitHub with no shared ID between them - is its own hard problem (entity resolution), and I didn't think I could do it justice in the time I had, so I scoped it out (more below).
+- I added `location` and `start_date` columns to the CSV even though the brief's example table didn't list them, since that's what a real recruiter export would actually have, and the brief said the schema was mine to refine.
+- Location parsing is just splitting on commas (`City, Region, Country`), which is good enough for the sample data but obviously not bulletproof. I did add a check for US state abbreviations specifically because I ran into the bug myself - "San Francisco, CA" was getting parsed as Canada before I caught it, since CA is both a US state and an ISO country code.
 
-## Edge cases handled (see tests for each)
+## Edge cases I tested for
 
-1. **Missing/corrupt source** — malformed JSON, a fixture path that
-   doesn't exist, an empty notes file. Each is logged in `source_errors`
-   and skipped; the candidate still gets a profile from what's left.
-2. **Conflicting values** — highest-priority source wins, confidence
-   takes a penalty, losers stay in `provenance`. Two weak sources agreeing
-   with each other doesn't outvote one strong source (see C-1002's title).
-3. **Partial/messy dates** — year-only ("2019") parses to `2019-01` with a
-   precision note rather than a confident-looking fake month; "Present"
-   is treated as open-ended, not coerced into a real date.
-4. **Phone with no country code and no location hint** — falls back to a
-   configured default region, but the result is explicitly flagged as a
-   guess (lower confidence) rather than presented as a clean parse.
-5. **Same skill, different spelling/case** ("ReactJS"/"React.js"/"js"/"py")
-   — canonicalized via an alias table and merged into one entry with a
-   combined source list.
+1. Missing or corrupt sources (bad JSON, a fixture file that doesn't exist, an empty notes file) - logged, skipped, the candidate still gets whatever's left.
+2. Conflicting values across sources - higher-priority source wins, confidence takes a small hit, the loser stays recorded in provenance instead of getting thrown away.
+3. Messy dates - year-only gets flagged as low precision rather than a confident fake month, "Present" doesn't get coerced into a real date.
+4. Phone numbers with no country code and no location to infer one from - falls back to a default region but flags the result as a guess (lower confidence), doesn't pretend it's a clean parse.
+5. Same skill written differently across sources ("ReactJS" / "React.js" / "js") - all canonicalize to one entry with the combined list of sources.
 
-## Descoped (would do with more time)
+## What I left out (and why)
 
-- **Fuzzy cross-source identity resolution** when there's no shared ID —
-  deliberately pushed to the manifest/orchestration layer; doing it well
-  (name + company + email similarity, confidence-scored) is its own
-  project.
-- **Resume PDF/DOCX parsing** — used GitHub + notes as the two
-  unstructured sources instead, since layout-aware resume extraction
-  varies wildly by template and deserves dedicated effort. The extractor
-  interface (`extract_source(spec, base_dir) -> (raw_record, type, error)`)
-  is pluggable, so a resume extractor is one more module, not a redesign.
-- **Live GitHub calls in tests/CI** — the live-fetch code path exists
-  (`extractors._fetch_github_live`) but isn't exercised by the test suite,
-  to keep results deterministic and runnable offline.
-- **NER-based skill extraction from free text** — dictionary + keyword
-  matching only; won't generalize to truly open-vocabulary skill mentions.
-- **Location agreement bonus** only fires on an *exact* (city, region,
-  country) match across sources; a source missing just the `region`
-  doesn't get credited as "agreeing" with one that has it, even though
-  they're both right about city+country. The priority-weighted winner is
-  still correct either way — this only affects the cosmetic confidence
-  boost, not correctness.
-- A real UI — CLI only, per the brief's explicit lower priority on this.
+Honestly the biggest thing is entity resolution - matching records across sources when there's no shared ID. I think doing it properly (name + company + email similarity, with its own confidence scoring) is a real project on its own, so I pushed it up to the manifest/orchestration layer instead of trying to half-solve it here.
 
-## Repo layout
+I also skipped resume parsing and used GitHub + notes as my two unstructured sources instead. Resume layouts vary so much that extracting structured info reliably from PDFs/DOCX felt like it deserved its own focused effort rather than something I could bolt on. The extractor interface is the same shape for every source type though, so adding a resume extractor later is mostly just writing one more function, not redesigning anything.
+
+The live GitHub API path exists in the code but isn't used by any test, just to keep CI deterministic and offline-runnable.
+
+Skill detection in free text is just dictionary + keyword matching - it won't catch a skill it's never seen before, no real NLP going on there.
+
+One small thing: the confidence boost for "sources agree on location" only fires if city, region, AND country all match exactly. If one source is missing just the region, it doesn't get counted as agreeing even though it's not really wrong. Doesn't affect which value wins, just slightly understates the confidence bump in that specific case.
+
+And no real UI, just a CLI - the brief said this was explicitly lower priority, so I didn't spend time on it.
+
+## Where everything is
 
 ```
-cli.py                      thin CLI entry point
+cli.py                      entry point you actually run
 src/transformer/
-  extractors.py              detect + extract (per source type)
-  normalizers.py              normalize (phone/date/country/skill/name)
-  source_priority.py          per-field source reliability weights
-  merge.py                    merge + confidence + provenance
-  project.py                  runtime-config projection layer
-  validate.py                 config sanity check + output shape check
-  pipeline.py                  orchestrates the above per-candidate, per-batch
-data/                         fabricated sample sources + manifest.json
-configs/recruiter_lite.json   example custom output config
-outputs/                      produced output (committed, see below)
-tests/                        pytest suite (35 tests)
-design/                       the one-page design doc (PDF)
+  extractors.py              pulls raw data out of each source
+  normalizers.py             phone/date/country/skill/name cleanup
+  source_priority.py         which source to trust more, per field
+  merge.py                   conflict resolution + confidence + provenance
+  project.py                 the config/output-shaping layer
+  validate.py                checks the final output matches the config
+  pipeline.py                ties all of the above together per candidate
+data/                        the made-up sample sources + manifest.json
+configs/recruiter_lite.json  example custom output config
+outputs/                     output from actually running this, committed
+tests/                       35 pytest tests
+design/                      the one-page design doc PDF
 ```
 
-`outputs/default_output.json` and `outputs/recruiter_lite_output.json` are
-the actual output produced by running the two commands above against
-`data/manifest.json` — committed as requested, not regenerated at review
-time, though it's deterministic so re-running reproduces them exactly.
+`outputs/default_output.json` and `outputs/recruiter_lite_output.json` are real output from running the two commands above - I committed them rather than regenerating at review time, though since everything's deterministic, re-running gives you the exact same thing.

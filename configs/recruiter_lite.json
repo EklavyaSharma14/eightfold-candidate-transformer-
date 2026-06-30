@@ -1,5 +1,5 @@
 {
-  "_comment": "Example custom config: a slim recruiter-facing view. Subsets fields, renames a couple from their canonical path, asks for a human-readable national phone format instead of E.164, flattens skill names to a plain string list, drops provenance, and errors out (rather than silently nulling) if a candidate has no name on file.",
+  "_comment": "slim recruiter-facing config - subset/rename fields, national phone format, no provenance, errors if name is missing",
   "fields": [
     { "path": "id", "from": "candidate_id", "type": "string", "required": true },
     { "path": "full_name", "from": "full_name", "type": "string", "required": true },
